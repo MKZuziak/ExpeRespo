@@ -15,7 +15,7 @@ import utils
 
 if __name__ == "__main__":
 
-    load_path = r'C:\Users\macie\ML_Notebooks\VAST_2022\Source\VAST-Challenge-2022\VAST-Challenge-2022\Models\Decen_\VAST\array_limited_100_v2.npy'
+    load_path = r'.\array_limited_100_v2.npy'
     # For now, the test set is a ragged sequence of a shape (261, 2). Each tuple (X, y) nested in the list contains a three dimensional list of observations (so the shape is [n, 3]
     # where n stands for the number of observations in that tuple) and corresponding list of dependant variables (y).
     # Each tuple represents a set of observations that belongs to certain participant. So the train_set[0] will be a set of observations (X, y) that belongs to the user 0. 
