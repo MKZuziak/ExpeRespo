@@ -7,10 +7,10 @@ from tabnanny import verbose
 import warnings
 import flwr as fl
 import numpy as np
+from Vast_Flower.FinStat_Flower.utils import get_model_parameters
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
-from sklearn.preprocessing import StandardScaler
 import utils
 
 if __name__ == "__main__":
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         valloader = test_set[int(cid)]
 
         # Create a  single Flower client representing a single organization
-        return FlowerClient(model, trainloader, valloader)
+        return FlowerClient(cid, model, trainloader, valloader)
 
 def weighted_average(metrics):
     # Multiply accuracy of each client by number of examples used
@@ -87,13 +87,15 @@ def weighted_average(metrics):
     return {"accuracy": sum(accuracies) / sum(examples)}
 
 # Create FedAvg strategy
-strategy = fl.server.strategy.FedAvg(
+params = get_model_parameters(model)
+strategy = fl.server.strategy.FedAdagrad(
         fraction_fit=1.0,  # Sample 100% of available clients for training
         fraction_evaluate=0.2,  # Sample 50% of available clients for evaluation
         min_fit_clients=1,  # Never sample less than 1 client for training
         min_evaluate_clients=1,  # Never sample less than 1 client for evaluation
         min_available_clients=1,  # Wait until all 1 client are available
-        evaluate_metrics_aggregation_fn=weighted_average
+        evaluate_metrics_aggregation_fn=weighted_average,
+        initial_parameters=fl.common.ndarrays_to_parameters(params),
 )
 
 # Start simulation
