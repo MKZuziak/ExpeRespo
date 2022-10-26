@@ -1,13 +1,25 @@
-from cgi import test
+import sys
+import os
+
 import warnings
 import flwr as fl
 import numpy as np
 
+import sklearn
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
+
 import utils
+import custom_classes
 
 if __name__ == "__main__":
+    print("""Starting the simulation, package information:
+    Python: {},
+    Flower: {},
+    Numpy: {},
+    Sklearn: {}.""".format(sys.version, fl.__version__, np.__version__, sklearn.__version__))
+    
+    
     (X_train, y_train), (X_test, y_test) = utils.load_mnist()
 
     train_set = [utils.partition(X_train, y_train, 10)[partition_id] for partition_id in range(10)]
@@ -74,6 +86,10 @@ if __name__ == "__main__":
         loss = log_loss(evaluation_set[1], model.predict_proba(evaluation_set[0]))
         accuracy = model.score(evaluation_set[0], evaluation_set[1])
         print(f"Server-side evaluation: accuracy {accuracy}")
+
+        with open("Server_Metrics.csv", 'a') as server_f:
+            server_f.write("{}, {} \n".format(server_round, accuracy))
+
         return loss, {"accuracy": accuracy}
 
     def fit_config(server_round: int):
@@ -96,7 +112,7 @@ if __name__ == "__main__":
     utils.set_initial_params(model)
 
     # Create FedAvg strategy
-    strategy = fl.server.strategy.FedAdagrad(
+    strategy = custom_classes.AggregateCustomMetricStrategy(
             fraction_fit=1.0,  # Sample 100% of available clients for training
             fraction_evaluate=0.5,  # Sample 50% of available clients for evaluation
             min_fit_clients=10,  # Never sample less than 10 clients for training

@@ -77,3 +77,10 @@ def partition(X: np.ndarray, y: np.ndarray, num_partitions: int) -> XYList:
     return list(
         zip(np.array_split(X, num_partitions), np.array_split(y, num_partitions))
     )
+
+def package_information() -> None:
+    print("""Starting the simulation, package information:
+    Python: {},
+    Flower: {},
+    Numpy: {},
+    Sklearn: {}.""".format(sys.version, fl.__version__, np.__version__, sklearn.__version__))
