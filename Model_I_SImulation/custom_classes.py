@@ -1,4 +1,5 @@
 import warnings
+from xml.dom.minidom import Element
 import flwr as fl
 import numpy as np
 
@@ -25,12 +26,16 @@ class AggregateCustomMetricStrategy(fl.server.strategy.FedAvg):
         accuracies = [r.metrics["accuracy"] * r.num_examples for _, r in results]
         examples = [r.num_examples for _, r in results]
 
+        acc = [r.metrics["accuracy"]for _, r in results]
+        acc_str = ','.join([str(example) for example in acc])
+        ex_str = ','.join([str(example) for example in examples])
+
         # Aggregate and print custom metric
         with open('Aggregated_Metrics.csv', "a") as metric_f:
-            metric_f.write("{}, {}, {}\n".format(server_round, accuracies, examples))
+            metric_f.write("{},{},{}\n".format(server_round, acc_str, ex_str))
         
         with open("Aggregation_Log.txt", 'a') as agre_f:
-            agre_f.write("Server round:{}, results:{}\n".format(server_round, results))
+            agre_f.write("Server round:{} results:{}\n".format(server_round, results))
 
         aggregated_accuracy = sum(accuracies) / sum(examples)
         print(f"Round {server_round} accuracy aggregated from client results: {aggregated_accuracy}")
