@@ -6,6 +6,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
 import utils
+import os
 
 class AggregateCustomMetricStrategy(fl.server.strategy.FedAvg):
     def aggregate_evaluate(
@@ -26,16 +27,28 @@ class AggregateCustomMetricStrategy(fl.server.strategy.FedAvg):
         accuracies = [r.metrics["accuracy"] * r.num_examples for _, r in results]
         examples = [r.num_examples for _, r in results]
 
-        acc = [r.metrics["accuracy"]for _, r in results]
-        acc_str = ','.join([str(example) for example in acc])
-        ex_str = ','.join([str(example) for example in examples])
+        folder_name = 'Metrics'
 
-        # Aggregate and print custom metric
-        with open('Aggregated_Metrics.csv', "a") as metric_f:
+        # Aggregate and save aggregated metrics from clients (without client cid)
+        file_name = os.path.join(folder_name, 'Aggregated_Metrics.csv')
+        with open(file_name, "a") as metric_f:
+            acc = [r.metrics["accuracy"] for _, r in results]
+            acc_str = ','.join([str(example) for example in acc])
+            ex_str = ','.join([str(example) for example in examples])
             metric_f.write("{},{},{}\n".format(server_round, acc_str, ex_str))
+
+        # Saves all the received evaluation results from clients (with client cid)
+        file_name = os.path.join(folder_name, 'Aggregated_Evaluation.csv')
+        with open(file_name, "a") as metric_e:
+            for client_num in range(len(results)):
+                metric = results[client_num][1].metrics
+                metric_e.write("{},{},{}\n".format(server_round, metric["cid"], metric['accuracy']))
         
-        with open("Aggregation_Log.txt", 'a') as agre_f:
-            agre_f.write("Server round:{} results:{}\n".format(server_round, results))
+        folder_name = "Logs"
+        file_name = os.path.join(folder_name, 'Evaluation_Aggregation_Log.txt')
+        # Saves all the messages received from clients during evaluation.
+        with open(file_name, 'a') as agre_f:
+            agre_f.write("Server round: {} results: {}\n".format(server_round, results))
 
         aggregated_accuracy = sum(accuracies) / sum(examples)
         print(f"Round {server_round} accuracy aggregated from client results: {aggregated_accuracy}")

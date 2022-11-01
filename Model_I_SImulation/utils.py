@@ -2,6 +2,7 @@ from typing import Tuple, Union, List
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 import openml
+import os
 
 XY = Tuple[np.ndarray, np.ndarray]
 Dataset = Tuple[XY, XY]
@@ -77,10 +78,3 @@ def partition(X: np.ndarray, y: np.ndarray, num_partitions: int) -> XYList:
     return list(
         zip(np.array_split(X, num_partitions), np.array_split(y, num_partitions))
     )
-
-def package_information() -> None:
-    print("""Starting the simulation, package information:
-    Python: {},
-    Flower: {},
-    Numpy: {},
-    Sklearn: {}.""".format(sys.version, fl.__version__, np.__version__, sklearn.__version__))

@@ -22,10 +22,10 @@ if __name__ == "__main__":
     
     (X_train, y_train), (X_test, y_test) = utils.load_mnist()
 
-    train_set = [utils.partition(X_train, y_train, 10)[partition_id] for partition_id in range(10)]
-    test_set = [utils.partition(X_test, y_test, 10)[partition_id] for partition_id in range(10)]
+    train_set = [utils.partition(X_train, y_train, 100)[partition_id] for partition_id in range(100)]
+    test_set = [utils.partition(X_test, y_test, 100)[partition_id] for partition_id in range(100)]
     
-    NUM_CLIENTS = 10
+    NUM_CLIENTS = 100
 
     class FlowerClient(fl.client.NumPyClient):
         def __init__(self, cid, model, train_data, test_data):
@@ -56,7 +56,7 @@ if __name__ == "__main__":
             utils.set_model_params(self.model, parameters)
             loss = log_loss(self.test_data[1], self.model.predict_proba(self.test_data[0]))
             accuracy = self.model.score(self.test_data[0], self.test_data[1])
-            return loss, len(self.test_data[0]), {"accuracy": accuracy}
+            return loss, len(self.test_data[0]), {"accuracy": accuracy, "cid":self.cid}
 
     def client_fn(cid: str) -> FlowerClient:
         """Create a Flower client representing a single organization."""
@@ -87,7 +87,8 @@ if __name__ == "__main__":
         accuracy = model.score(evaluation_set[0], evaluation_set[1])
         print(f"Server-side evaluation: accuracy {accuracy}")
 
-        with open("Server_Metrics.csv", 'a') as server_f:
+        file_name = os.path.join("Metrics", "Server_Metrics.csv")
+        with open(file_name, 'a') as server_f:
             server_f.write("{}, {} \n".format(server_round, accuracy))
 
         return loss, {"accuracy": accuracy}
@@ -113,8 +114,8 @@ if __name__ == "__main__":
 
     # Create FedAvg strategy
     strategy = custom_classes.AggregateCustomMetricStrategy(
-            fraction_fit=1.0,  # Sample 100% of available clients for training
-            fraction_evaluate=0.5,  # Sample 50% of available clients for evaluation
+            fraction_fit=0.1,  # Sample 100% of available clients for training
+            fraction_evaluate=0.05,  # Sample 50% of available clients for evaluation
             min_fit_clients=10,  # Never sample less than 10 clients for training
             min_evaluate_clients=5,  # Never sample less than 5 clients for evaluation
             min_available_clients=10,  # Wait until all 10 clients are available
@@ -128,6 +129,6 @@ if __name__ == "__main__":
     fl.simulation.start_simulation(
         client_fn=client_fn,
         num_clients=NUM_CLIENTS,
-        config=fl.server.ServerConfig(num_rounds=20),
+        config=fl.server.ServerConfig(num_rounds=50),
         strategy=strategy,
     )
