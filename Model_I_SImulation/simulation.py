@@ -11,6 +11,7 @@ from sklearn.metrics import log_loss
 
 import utils
 import custom_classes
+import copy
 
 if __name__ == "__main__":
     print("""Starting the simulation, package information:
@@ -22,8 +23,25 @@ if __name__ == "__main__":
     
     (X_train, y_train), (X_test, y_test) = utils.load_mnist()
 
+    
     train_set = [utils.partition(X_train, y_train, 100)[partition_id] for partition_id in range(100)]
     test_set = [utils.partition(X_test, y_test, 100)[partition_id] for partition_id in range(100)]
+
+    central_model = LogisticRegression(
+    penalty="l2",
+    max_iter=1000,  # local epoch
+    warm_start=True,  # prevent refreshing weights when fitting
+    )
+
+    utils.set_initial_params(central_model)
+    central_model.fit(X_train, y_train)
+    
+    file_name = os.path.join('Metrics', 'Centralised_Model_Evaluation.csv')
+    with open(file_name, "w") as metric_cen:
+        for cid in range(len(test_set)):
+            score = central_model.score(test_set[cid][0], test_set[cid][1])
+            metric_cen.write("{},{}\n".format((cid+1), score))
+    
     
     NUM_CLIENTS = 100
 
